@@ -278,9 +278,24 @@ fn chains_are_isolated_per_token_and_namespace() {
     let oracle_a = Address::generate(&env);
     let oracle_b = Address::generate(&env);
     let oracle_c = Address::generate(&env);
-    client.set_oracle_chain(&issuer, &ns_a, &token_a, &chain(&env, &[oracle_a.clone()], 60));
-    client.set_oracle_chain(&issuer, &ns_a, &token_b, &chain(&env, &[oracle_b.clone()], 60));
-    client.set_oracle_chain(&issuer, &ns_b, &token_a, &chain(&env, &[oracle_c.clone()], 60));
+    client.set_oracle_chain(
+        &issuer,
+        &ns_a,
+        &token_a,
+        &chain(&env, &[oracle_a.clone()], 60),
+    );
+    client.set_oracle_chain(
+        &issuer,
+        &ns_a,
+        &token_b,
+        &chain(&env, &[oracle_b.clone()], 60),
+    );
+    client.set_oracle_chain(
+        &issuer,
+        &ns_b,
+        &token_a,
+        &chain(&env, &[oracle_c.clone()], 60),
+    );
 
     assert_eq!(
         client
