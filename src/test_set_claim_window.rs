@@ -131,13 +131,8 @@ fn set_claim_window_accepts_u64_max_boundaries() {
     assert_eq!(window.end_timestamp, u64::MAX);
 
     // Degenerate upper edge: both ends pinned at u64::MAX is still `start == end`.
-    let result = client.try_set_claim_window(
-        &issuer,
-        &symbol_short!("ns"),
-        &token,
-        &u64::MAX,
-        &u64::MAX,
-    );
+    let result =
+        client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &u64::MAX, &u64::MAX);
     assert!(result.is_ok(), "u64::MAX == u64::MAX must be accepted, got {result:?}");
 }
 
@@ -166,11 +161,7 @@ fn set_claim_window_rejects_inverted_range() {
     let (_env, _id, client, issuer, token) = setup();
 
     let result = client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &2_000, &1_000);
-    assert_eq!(
-        result,
-        Err(Ok(RevoraError::LimitReached)),
-        "start > end must be rejected"
-    );
+    assert_eq!(result, Err(Ok(RevoraError::LimitReached)), "start > end must be rejected");
 
     assert_eq!(
         client.get_claim_window(&issuer, &symbol_short!("ns"), &token),
@@ -183,9 +174,7 @@ fn set_claim_window_rejects_inverted_range() {
 fn rejected_reconfiguration_keeps_the_previous_window() {
     let (_env, _id, client, issuer, token) = setup();
 
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &100, &200)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &100, &200).is_ok());
 
     let result = client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &900, &300);
     assert_eq!(result, Err(Ok(RevoraError::LimitReached)));
@@ -241,10 +230,7 @@ fn set_claim_window_rejects_unknown_namespace() {
     let result = client.try_set_claim_window(&issuer, &symbol_short!("other"), &token, &10, &20);
     assert_eq!(result, Err(Ok(RevoraError::OfferingNotFound)));
 
-    assert_eq!(
-        client.get_claim_window(&issuer, &symbol_short!("other"), &token),
-        None
-    );
+    assert_eq!(client.get_claim_window(&issuer, &symbol_short!("other"), &token), None);
 }
 
 #[test]
@@ -262,16 +248,11 @@ fn set_claim_window_rejects_unknown_token() {
 fn set_claim_window_overwrites_previous_value() {
     let (_env, _id, client, issuer, token) = setup();
 
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &100, &200)
-        .is_ok());
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &300, &400)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &100, &200).is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &300, &400).is_ok());
 
-    let window = client
-        .get_claim_window(&issuer, &symbol_short!("ns"), &token)
-        .expect("window must exist");
+    let window =
+        client.get_claim_window(&issuer, &symbol_short!("ns"), &token).expect("window must exist");
     assert_eq!(window.start_timestamp, 300);
     assert_eq!(window.end_timestamp, 400);
 }
@@ -286,9 +267,8 @@ fn set_claim_window_is_idempotent_for_identical_values() {
     assert_eq!(first, Ok(()));
     assert_eq!(second, Ok(()), "re-setting the same window must succeed");
 
-    let window = client
-        .get_claim_window(&issuer, &symbol_short!("ns"), &token)
-        .expect("window must exist");
+    let window =
+        client.get_claim_window(&issuer, &symbol_short!("ns"), &token).expect("window must exist");
     assert_eq!(window.start_timestamp, 50);
     assert_eq!(window.end_timestamp, 75);
 }
@@ -312,13 +292,9 @@ fn claim_window_is_scoped_per_namespace() {
         &0u32,
     );
 
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20).is_ok());
 
-    assert!(client
-        .get_claim_window(&issuer, &symbol_short!("ns"), &token)
-        .is_some());
+    assert!(client.get_claim_window(&issuer, &symbol_short!("ns"), &token).is_some());
     assert_eq!(
         client.get_claim_window(&issuer, &symbol_short!("ns2"), &token),
         None,
@@ -344,9 +320,7 @@ fn claim_window_is_scoped_per_token() {
         &0u32,
     );
 
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20).is_ok());
 
     assert_eq!(
         client.get_claim_window(&issuer, &symbol_short!("ns"), &second_token),
@@ -373,9 +347,7 @@ fn claim_window_is_scoped_per_issuer() {
         &0u32,
     );
 
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20).is_ok());
 
     assert_eq!(
         client.get_claim_window(&second_issuer, &symbol_short!("ns"), &token),
@@ -391,9 +363,7 @@ fn frozen_contract_rejects_set_claim_window() {
     let (env, _id, client, issuer, token) = setup();
 
     // Configure a window first so we can prove the freeze does not erase it.
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &10, &20).is_ok());
 
     let admin = Address::generate(&env);
     client.initialize(&admin, &None::<Address>, &None::<bool>);
@@ -446,15 +416,10 @@ fn set_claim_window_emits_an_event_on_success() {
     let (env, _id, client, issuer, token) = setup();
 
     let before = env.events().all().len();
-    assert!(client
-        .try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &11, &22)
-        .is_ok());
+    assert!(client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &11, &22).is_ok());
     let after = env.events().all().len();
 
-    assert!(
-        after > before,
-        "a successful configuration must be observable (expected an event)"
-    );
+    assert!(after > before, "a successful configuration must be observable (expected an event)");
 }
 
 #[test]
@@ -465,11 +430,7 @@ fn set_claim_window_emits_no_event_on_rejection() {
     let result = client.try_set_claim_window(&issuer, &symbol_short!("ns"), &token, &99, &1);
     assert_eq!(result, Err(Ok(RevoraError::LimitReached)));
 
-    assert_eq!(
-        env.events().all().len(),
-        before,
-        "a rejected configuration must not emit an event"
-    );
+    assert_eq!(env.events().all().len(), before, "a rejected configuration must not emit an event");
 }
 
 // ─── 9. Ledger independence ──────────────────────────────────────────────────
